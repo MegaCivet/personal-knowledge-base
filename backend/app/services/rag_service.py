@@ -122,3 +122,36 @@ def create_index_for_file(db: Session, file_path: str, file_id: int):
         logger.error(f"文件索引创建失败, file_id: {file_id}, 错误: {e}", exc_info=True)
         # 向上层抛出异常，以便API可以返回错误信息
         raise
+
+
+def query_knowledge_base(query: str, n_results: int = 4) -> List[Document]:
+    """
+    在向量数据库中查询与问题相关的文本块
+
+    :param query: 用户的问题
+    :param n_results: 希望返回的相关文本块数量
+    :return: 一个包含相关文本块内容的 LangChain Document 列表
+    """
+    logger.info(f"开始在知识库中查询: '{query[:50]}...'")
+    try:
+        # 1. 获取嵌入模型
+        embeddings = get_embedding_model()
+
+        # 2. 初始化 ChromaDB 客户端
+        vector_store = Chroma(
+            collection_name=CHROMA_COLLECTION_NAME,
+            embedding_function=embeddings,
+            persist_directory=CHROMA_PERSIST_DIR
+        )
+
+        # 3. 执行相似度搜索
+        logger.debug(f"正在执行相似度搜索，返回 {n_results} 个结果...")
+        relevant_docs = vector_store.similarity_search(query=query, k=n_results)
+        
+        logger.info(f"查询到 {len(relevant_docs)} 个相关文档")
+        
+        # 4. 返回结果
+        return relevant_docs
+    except Exception as e:
+        logger.error(f"知识库查询失败, 错误: {e}", exc_info=True)
+        raise

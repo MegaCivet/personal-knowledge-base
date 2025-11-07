@@ -4,6 +4,13 @@ from app.models.knowledge_file import KnowledgeFile
 from app.schemas.knowledge_file import KnowledgeFileCreate
 from app.core.utils import get_snowflake_id
 
+def get(db: Session, id: int) -> KnowledgeFile | None:
+    """
+    根据ID查询知识库文件记录。
+    """
+    return db.query(KnowledgeFile).filter(KnowledgeFile.id == id).first()
+
+
 def get_by_filename(db: Session, filename: str) -> KnowledgeFile | None:
     """
     根据文件名查询知识库文件记录。
