@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Button, Input, List, Spin } from 'antd';
-import { postQuery } from '../api/chatApi';
+import { postQuery, type Source } from '../api/chatApi';
+import SourceList from './SourceList';
 
 interface Message {
   sender: 'user' | 'bot';
   text: string;
+  sources?: Source[];
 }
 
 const ChatWindow: React.FC = () => {
@@ -16,17 +18,17 @@ const ChatWindow: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (inputValue.trim()) {
-      const userMessage = { sender: 'user' as const, text: inputValue };
+      const userMessage: Message = { sender: 'user', text: inputValue };
       setMessages(prev => [...prev, userMessage]);
       setInputValue('');
       setLoading(true);
 
       try {
         const response = await postQuery(inputValue);
-        const botMessage = { sender: 'bot' as const, text: response.answer };
+        const botMessage: Message = { sender: 'bot', text: response.answer, sources: response.sources };
         setMessages(prev => [...prev, botMessage]);
       } catch (error) {
-        const errorMessage = { sender: 'bot' as const, text: '抱歉，服务出错了，请稍后再试。' };
+        const errorMessage: Message = { sender: 'bot', text: '抱歉，服务出错了，请稍后再试。' };
         setMessages(prev => [...prev, errorMessage]);
       } finally {
         setLoading(false);
@@ -43,7 +45,12 @@ const ChatWindow: React.FC = () => {
           <List.Item style={{ textAlign: item.sender === 'user' ? 'right' : 'left' }}>
             <List.Item.Meta
               title={item.sender === 'user' ? 'You' : 'Bot'}
-              description={item.text}
+              description={
+                <div>
+                  {item.text}
+                  {item.sender === 'bot' && item.sources && <SourceList sources={item.sources} />}
+                </div>
+              }
             />
           </List.Item>
         )}

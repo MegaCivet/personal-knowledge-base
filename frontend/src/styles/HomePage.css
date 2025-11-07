@@ -3,15 +3,47 @@
   flex-direction: row;
   height: 100vh;
   width: 100vw;
+  background-color: #f0f2f5; /* A light grey background for the whole page */
 }
 
 .left-panel {
-  flex: 0 0 30%; /* Takes up 30% of the width, doesn't grow or shrink */
-  padding: 1rem;
-  border-right: 1px solid #ccc;
+  flex: 0 0 30%;
+  border-right: 1px solid #d9d9d9;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Add some space between header and upload area */
+  background-color: #ffffff;
+  overflow-y: auto;
 }
 
 .right-panel {
-  flex: 1; /* Takes up the remaining space */
-  padding: 1rem;
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Space between logo and title */
+  padding: 1.5rem 1.5rem 0 1.5rem; /* Add padding to the header itself */
+}
+
+/* Force antd upload wrapper to have zero horizontal margin */
+.left-panel .ant-upload-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.app-logo {
+  font-size: 2rem; /* Make the logo bigger */
+  color: #1677ff; /* Ant Design's primary blue */
+}
+
+.app-title {
+  font-size: 1.25rem; /* Adjust title font size */
+  font-weight: 600;
+  margin: 0; /* Reset default h1 margin */
 }
