@@ -5,24 +5,11 @@ from sqlalchemy.orm import Session
 from app.services.rag_service import query_knowledge_base
 from app.crud import crud_knowledge
 from app.schemas.chat import QueryRequest, QueryResponse, SourceDocument
+from app.core import config
+from app.core.llm import async_client # 导入共享的客户端
 
 # 配置日志
 logger = logging.getLogger(__name__)
-
-# --- Prompt Template ---
-# 使用 f-string 定义一个清晰的模板
-PROMPT_TEMPLATE = """
-请根据以下提供的上下文信息，简洁明了地回答用户的问题。
-如果上下文中没有足够的信息，请明确告知“根据现有知识无法回答该问题”，不要编造答案。
-
-【上下文信息】
----
-{context}
----
-
-【用户问题】
-{query}
-"""
 
 
 async def generate_answer(db: Session, request: QueryRequest) -> QueryResponse:
@@ -31,29 +18,35 @@ async def generate_answer(db: Session, request: QueryRequest) -> QueryResponse:
 
     1. 检索: 从向量数据库中检索相关文档
     2. 构建: 构建 Prompt
-    3. 生成: (模拟)调用大模型生成答案
+    3. 生成: 调用大模型生成答案
     4. 格式化: 格式化源文档信息并返回
     """
     try:
         # 1. 检索
-        logger.info( f"开始为问题检索相关文档: {request.query[:50]}..." )
+        logger.info(f"开始为问题检索相关文档: {request.query[:50]}...")
         relevant_docs = query_knowledge_base(query=request.query, n_results=4)
 
         # 2. 构建 Prompt
-        # 将检索到的文档内容拼接成上下文
         context = "\n\n---\n\n".join([doc.page_content for doc in relevant_docs])
-        
-        # 使用模板构建最终的 prompt
-        prompt = PROMPT_TEMPLATE.format(context=context, query=request.query)
+        prompt = config.PROMPT_TEMPLATE.format(context=context, query=request.query)
         logger.debug(f"构建的 Prompt: \n{prompt}")
 
-        # 3. (模拟) 生成
-        # 在这里，我们将来会调用一个真正的大语言模型API (例如 DeepSeek, OpenAI)
-        # 目前，我们使用一个占位符来模拟这个过程
-        logger.info("正在调用 LLM 生成答案 (当前为模拟)...")
-        # TODO: 替换为真实的 LLM API 调用
-        llm_answer = f"这是一个根据您的问题 '{request.query}' 生成的模拟答案。\n" \
-                     f"它基于 {len(relevant_docs)} 个相关的知识片段。"
+        # 3. 生成
+        logger.info("正在调用 DeepSeek LLM API 生成答案...")
+        try:
+            response = await async_client.chat.completions.create(
+                model=config.DEEPSEEK_MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": config.SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt}
+                ],
+                stream=False
+            )
+            llm_answer = response.choices[0].message.content
+            logger.info("成功从 DeepSeek API 获取答案。")
+        except Exception as llm_error:
+            logger.error(f"调用 DeepSeek API 时发生错误: {llm_error}", exc_info=True)
+            llm_answer = "抱歉，调用语言模型服务时出现问题，请稍后再试。"
 
         # 4. 格式化源文档
         sources = []

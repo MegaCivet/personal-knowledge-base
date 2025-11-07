@@ -10,3 +10,4 @@ SQLAlchemy
 PyMySQL
 snowflakekit
 accelerate
+openai
