@@ -1,28 +1,24 @@
 import React from 'react';
 import { InboxOutlined } from '@ant-design/icons';
 import { message, Upload } from 'antd';
+import type { UploadProps } from 'antd';
+import { uploadFile } from '../api/knowledgeApi';
 
 const { Dragger } = Upload;
 
 const UploadArea: React.FC = () => {
-  const props = {
+  const props: UploadProps = {
     name: 'files',
     multiple: true,
-    action: '/api/v1/knowledge/upload',
     accept: '.md',
-    onChange(info: any) {
+    customRequest: uploadFile,
+    onChange(info) {
       const { status } = info.file;
-      if (status !== 'uploading') {
-        console.log(info.file, info.fileList);
-      }
       if (status === 'done') {
         message.success(`${info.file.name} 文件上传成功.`);
       } else if (status === 'error') {
         message.error(`${info.file.name} 文件上传失败.`);
       }
-    },
-    onDrop(e: any) {
-      console.log('Dropped files', e.dataTransfer.files);
     },
   };
 
