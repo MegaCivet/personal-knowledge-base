@@ -8,6 +8,8 @@ from app.api.v1.api import api_router
 from app.db.database import engine, Base, get_db
 from app.models.knowledge_file import KnowledgeFile
 from app.core.logging import setup_logging
+from app.core.embedding import load_embedding_model
+from app.core.llm import load_llm_client
 
 
 @asynccontextmanager
@@ -16,9 +18,22 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger = logging.getLogger(__name__)
     
-    logger.info("应用启动，开始创建数据库表...")
+    logger.info("应用启动，开始执行启动任务...")
+    
+    # 1. 创建数据库表
+    logger.info("检查并创建数据库表...")
     Base.metadata.create_all(bind=engine)
     logger.info("数据库表检查与创建完成。")
+
+    # 2. 预加载嵌入模型
+    load_embedding_model()
+
+    # 3. 预加载LLM客户端
+    logger.info("预加载LLM客户端...")
+    load_llm_client()
+    logger.info("LLM客户端预加载完成。")
+
+    logger.info("所有启动任务完成，应用准备就绪。")
     yield
     # 应用关闭时执行
     logger.info("应用关闭。")

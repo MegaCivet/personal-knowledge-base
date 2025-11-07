@@ -6,7 +6,7 @@ from app.services.rag_service import query_knowledge_base
 from app.crud import crud_knowledge
 from app.schemas.chat import QueryRequest, QueryResponse, SourceDocument
 from app.core import config
-from app.core.llm import async_client # 导入共享的客户端
+from app.core.llm import get_llm_client # 导入获取客户端的函数
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -22,6 +22,9 @@ async def generate_answer(db: Session, request: QueryRequest) -> QueryResponse:
     4. 格式化: 格式化源文档信息并返回
     """
     try:
+        # 获取LLM客户端实例
+        async_client = get_llm_client()
+
         # 1. 检索
         logger.info(f"开始为问题检索相关文档: {request.query[:50]}...")
         relevant_docs = query_knowledge_base(query=request.query, n_results=4)
