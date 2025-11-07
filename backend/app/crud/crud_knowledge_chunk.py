@@ -33,3 +33,30 @@ def create_chunks(db: Session, *, chunks_in: List[KnowledgeFileChunkCreate]) -> 
         db.refresh(db_chunk)
         
     return db_chunks
+
+def delete_by_file_id(db: Session, *, file_id: int) -> List[str]:
+    """
+    根据文件ID删除所有相关的文本块元数据记录，并返回被删除的向量ID列表。
+
+    :param db: 数据库会话对象。
+    :param file_id: 知识文件的ID。
+    :return: 被删除的向量ID（vector_id）列表。
+    """
+    # 1. 查询所有与 file_id 相关的记录
+    chunks_to_delete = db.query(KnowledgeFileChunk).filter(KnowledgeFileChunk.knowledge_file_id == file_id).all()
+    
+    if not chunks_to_delete:
+        return []
+
+    # 2. 提取 vector_id
+    vector_ids = [chunk.vector_id for chunk in chunks_to_delete]
+    
+    # 3. 删除记录
+    for chunk in chunks_to_delete:
+        db.delete(chunk)
+    
+    # 4. 提交事务
+    db.commit()
+    
+    # 5. 返回被删除的 vector_id 列表
+    return vector_ids

@@ -3,7 +3,7 @@ from typing import List
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 
-from app.crud import crud_knowledge
+from app.crud import crud_knowledge, crud_knowledge_chunk
 from app.services import file_service, rag_service
 from app.schemas.knowledge_file import KnowledgeFileResponse, KnowledgeFileCreate
 
@@ -17,7 +17,7 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
     1. 验证文件。
     2. 保存物理文件。
     3. 在数据库中创建或更新元数据记录。
-    4. 触发对新文件的RAG索引。
+    4. 触发对文件的RAG索引（对于已存在的文件，则为重新索引）。
     """
     if not files:
         raise HTTPException(status_code=400, detail="没有提供任何文件")
@@ -37,17 +37,27 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
         db_file = crud_knowledge.get_by_filename(db, filename=file.filename)
 
         if db_file:
+            # --- 更新逻辑 ---
+            logger.info(f"文件 '{file.filename}' 已存在，开始执行更新和重新索引流程...")
+            
+            # 2a. 从MySQL中删除旧的块记录，并获取需要删除的向量ID
+            logger.debug(f"正在从MySQL删除文件ID {db_file.id} 的旧索引记录...")
+            vector_ids_to_delete = crud_knowledge_chunk.delete_by_file_id(db=db, file_id=db_file.id)
+            logger.info(f"从MySQL中删除了 {len(vector_ids_to_delete)} 条旧记录。")
+
+            # 2b. 从ChromaDB中删除旧的向量
+            rag_service.delete_vectors(vector_ids=vector_ids_to_delete)
+
             processed_files.append(db_file)
-            # TODO: 此处可以添加逻辑，检查文件内容是否有变化，以决定是否需要重新索引
-            logger.info(f"文件 '{file.filename}' 已存在，跳过数据库记录创建。")
         else:
-            # 3. 如果是新文件，在数据库中创建记录
+            # --- 新增逻辑 ---
+            logger.info(f"文件 '{file.filename}' 是新文件，创建数据库记录...")
             file_in = KnowledgeFileCreate(filename=file.filename)
             new_db_file = crud_knowledge.create(db, file_in=file_in)
             processed_files.append(new_db_file)
             db_file = new_db_file # 统一变量名以便后续使用
 
-        # 4. 触发RAG索引流程
+        # 4. 触发RAG索引流程 (对新文件或已更新文件)
         try:
             logger.info(f"准备为文件 '{db_file.filename}' (ID: {db_file.id}) 创建索引...")
             rag_service.create_index_for_file(db=db, file_path=saved_path, file_id=db_file.id)

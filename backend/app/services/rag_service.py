@@ -159,3 +159,30 @@ def query_knowledge_base(query: str, n_results: int = 4) -> List[Document]:
     except Exception as e:
         logger.error(f"知识库查询失败, 错误: {e}", exc_info=True)
         raise
+
+def delete_vectors(vector_ids: List[str]):
+    """
+    从 ChromaDB 中删除指定的向量。
+
+    :param vector_ids: 要删除的向量ID列表。
+    """
+    if not vector_ids:
+        logger.info("没有需要删除的向量ID，跳过删除操作。")
+        return
+
+    logger.info(f"准备从 ChromaDB 中删除 {len(vector_ids)} 个向量...")
+    try:
+        # 初始化ChromaDB客户端，注意这里不需要嵌入函数
+        vector_store = Chroma(
+            collection_name=CHROMA_COLLECTION_NAME,
+            persist_directory=CHROMA_PERSIST_DIR
+        )
+        
+        # 执行删除操作
+        vector_store.delete(ids=vector_ids)
+        logger.info(f"成功从 ChromaDB 中删除了 {len(vector_ids)} 个向量。")
+
+    except Exception as e:
+        logger.error(f"从 ChromaDB 删除向量失败, 错误: {e}", exc_info=True)
+        # 即使删除失败，也只记录错误，不应中断主流程
+        pass
