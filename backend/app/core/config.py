@@ -20,7 +20,7 @@ UPLOADS_DIR = os.path.join(PROJECT_ROOT, "data", "uploads")
 CHROMA_COLLECTION_NAME = "personal_knowledge_base"
 
 # 使用的开源嵌入模型名称, 例如: 'm3e-base' 或 'bge-m3'
-EMBEDDING_MODEL_NAME = "m3e-base"
+EMBEDDING_MODEL_NAME = "moka-ai/m3e-base"
 
 
 # --- MySQL数据库配置 ---

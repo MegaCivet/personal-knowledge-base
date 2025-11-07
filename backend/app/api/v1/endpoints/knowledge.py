@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
 
 from app.services import knowledge_service
-from app.schemas.knowledge import KnowledgeFileResponse
+from app.schemas.knowledge_file import KnowledgeFileResponse
 from app.db.database import get_db
 from app.db.vector_store import get_or_create_collection
 

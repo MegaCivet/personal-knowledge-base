@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models.knowledge_file import KnowledgeFile
-from app.schemas.knowledge import KnowledgeFileCreate
+from app.schemas.knowledge_file import KnowledgeFileCreate
 from app.core.utils import get_snowflake_id
 
 def get_by_filename(db: Session, filename: str) -> KnowledgeFile | None:

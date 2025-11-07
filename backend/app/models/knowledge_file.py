@@ -1,4 +1,5 @@
 from sqlalchemy import Column, BigInteger, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.database import Base
@@ -16,6 +17,13 @@ class KnowledgeFile(Base):
     created_at = Column(DateTime, server_default=func.now(), comment="创建时间")
     
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment="更新时间")
+
+    # 建立与 KnowledgeFileChunk 模型的一对多关系
+    chunks = relationship(
+        "KnowledgeFileChunk",
+        back_populates="knowledge_file",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<KnowledgeFile(id={self.id}, filename='{self.filename}')>"
