@@ -60,23 +60,22 @@
     -   使用 `Vite` 或 `Create React App` 搭建 React 项目框架。
     -   安装 `antd` (UI库), `axios` (HTTP客户端), `react-markdown` (用于渲染Markdown格式的答案和来源)。
 
-2.  **页面与组件开发**:
-    -   **主页 (`HomePage.js`):** 布局页面结构，包含左侧文件列表/上传区和右侧聊天窗口。
-    -   **上传组件 (`UploadArea.js`):**
+2.  **项目结构调整与组件开发 (Project Structure Adjustment & Component Development)**:
+    -   **创建目录结构:** 在 `src` 目录下创建 `components`, `pages`, `api`, `hooks`, `styles` 等文件夹，以组织代码。
+    -   **主页开发 (`pages/HomePage.tsx`):** 创建主页组件，作为应用的整体布局容器。
+    -   **根组件改造 (`App.tsx`):** 修改 `App.tsx`，使其加载并显示 `HomePage` 页面。
+    -   **上传组件 (`components/UploadArea.tsx`):**
         -   实现文件拖拽和选择上传功能。
         -   调用 `POST /api/v1/knowledge/upload` 接口。
         -   显示上传进度和成功/失败状态。
-        -   上传成功后，应能触发文件列表的刷新。
-    -   **聊天窗口 (`ChatWindow.js`):**
-        -   包含一个消息输入框和消息展示区。
-        -   用户输入问题后，调用 `POST /api/v1/chat/query` 接口。
-        -   支持 Loading 状态，在等待后端响应时给出提示。
-    -   **消息组件 (`Message.js`):**
-        -   用于展示用户问题和模型的回答。
-        -   模型的回答（`answer`）应使用 `react-markdown` 进行渲染，以正确显示格式。
-    -   **来源列表 (`SourceList.js`):**
-        -   在模型回答下方，展示引用的来源 (`sources`)。
-        -   每个来源应清晰地显示其来源文件名 (`filename`) 和具体的文本块内容 (`content`)，同样使用 `react-markdown` 渲染。
+    -   **聊天窗口 (`components/ChatWindow.tsx`):**
+        -   包含消息输入框和消息展示区。
+        -   调用 `POST /api/v1/chat/query` 接口。
+    -   **消息组件 (`components/Message.tsx`):**
+        -   用于展示用户和模型的对话消息。
+        -   使用 `react-markdown` 渲染模型返回的 Markdown 格式答案。
+    -   **来源组件 (`components/SourceList.tsx`):**
+        -   在模型回答下方，展示引用的来源。
 
 3.  **状态管理**:
     -   使用 React Hooks (`useState`, `useEffect`, `useContext`) 或状态管理库（如 Zustand, Redux Toolkit）来管理聊天记录、文件列表和应用加载状态。

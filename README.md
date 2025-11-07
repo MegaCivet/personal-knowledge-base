@@ -46,24 +46,16 @@ backend/
 ```
 frontend/
 ├── public/
-│   └── index.html
+│   └── vite.svg
 ├── src/
-│   ├── api/
-│   │   ├── knowledgeApi.js        # 知识库管理的 API 调用
-│   │   └── chatApi.js             # 聊天功能的 API 调用
-│   ├── components/
-│   │   ├── UploadArea/            # 文件上传组件
-│   │   ├── ChatWindow/            # 主聊天界面
-│   │   ├── Message/               # 单条聊天消息气泡
-│   │   └── SourceList/            # 显示答案的溯源文档
-│   ├── hooks/
-│   │   └── useChat.js             # 封装聊天逻辑的自定义 Hook
-│   ├── pages/
-│   │   └── HomePage.js            # 应用的主页面
-│   ├── styles/
-│   │   └── App.css                # 全局样式
-│   ├── App.js                     # React 根组件
-│   └── index.js                   # React 应用入口
+│   ├── assets/
+│   │   └── react.svg
+│   ├── App.css                    # App 根组件样式
+│   ├── App.tsx                    # App 根组件 (TypeScript + JSX)
+│   ├── index.css                  # 全局样式
+│   └── main.tsx                   # React 应用入口 (TypeScript + JSX)
 ├── .gitignore
-└── package.json                   # NPM 依赖
+├── index.html                     # HTML 入口文件
+├── package.json                   # NPM 依赖
+└── vite.config.ts                 # Vite 配置文件
 ```
