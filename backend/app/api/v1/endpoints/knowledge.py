@@ -1,12 +1,31 @@
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
 
 from app.services import knowledge_service
 from app.schemas.knowledge import KnowledgeFileResponse
 from app.db.database import get_db
+from app.db.vector_store import get_or_create_collection
 
 router = APIRouter()
+
+
+@router.get("/test_chroma", summary="测试 ChromaDB 连接")
+async def test_chroma_connection():
+    """
+    一个临时端点，用于验证与 ChromaDB 的连接是否正常，
+    并确认能否成功获取或创建集合。
+    """
+    try:
+        collection = get_or_create_collection()
+        return {
+            "message": "成功连接到 ChromaDB 并获取/创建集合。",
+            "collection_name": collection.name,
+            "item_count": collection.count()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"连接 ChromaDB 失败: {str(e)}")
+
 
 @router.post("/upload", response_model=List[KnowledgeFileResponse])
 def upload_files(
