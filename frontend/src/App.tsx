@@ -1,9 +1,12 @@
+import { App as AntApp } from 'antd';
 import './App.css'
 import HomePage from './pages/HomePage';
 
 function App() {
   return (
-    <HomePage />
+    <AntApp>
+      <HomePage />
+    </AntApp>
   )
 }
 

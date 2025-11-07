@@ -25,3 +25,13 @@ export const uploadFile = async (options: any) => {
     onError(err);
   }
 };
+
+export const getKnowledgeFiles = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/files`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching knowledge files:", error);
+    throw error;
+  }
+};

@@ -43,3 +43,13 @@ def upload_files(
     """
     processed_files = knowledge_service.process_upload_files(db=db, files=files)
     return processed_files
+
+
+@router.get("/files", response_model=List[KnowledgeFileResponse], summary="获取所有知识文件")
+def get_all_files(
+    db: Session = Depends(get_db)
+):
+    """
+    获取所有已上传的知识文件列表。
+    """
+    return knowledge_service.get_all_knowledge_files(db=db)

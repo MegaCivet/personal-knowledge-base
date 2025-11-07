@@ -74,3 +74,11 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
         db.refresh(db_file)
 
     return processed_files
+
+
+def get_all_knowledge_files(db: Session) -> List[KnowledgeFileResponse]:
+    """
+    获取所有知识库文件。
+    """
+    knowledge_files = crud_knowledge.get_all(db)
+    return [KnowledgeFileResponse.model_validate(file) for file in knowledge_files]

@@ -31,3 +31,10 @@ def create(db: Session, file_in: KnowledgeFileCreate) -> KnowledgeFile:
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+
+def get_all(db: Session) -> list[KnowledgeFile]:
+    """
+    获取所有知识库文件记录。
+    """
+    return db.query(KnowledgeFile).all()
