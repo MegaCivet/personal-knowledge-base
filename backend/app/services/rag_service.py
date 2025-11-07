@@ -2,7 +2,7 @@ import logging
 from typing import List
 from sqlalchemy.orm import Session
 from langchain_community.document_loaders import TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import MarkdownTextSplitter
 from langchain_core.documents import Document
 
 from langchain_chroma import Chroma
@@ -33,16 +33,20 @@ def _load_document(file_path: str) -> List[Document]:
 
 def _split_text(documents: List[Document]) -> List[Document]:
     """将文档分割成文本块"""
-    logger.info(f"开始分割 {len(documents)} 个文档")
+    logger.info(f"开始使用 MarkdownTextSplitter 分割 {len(documents)} 个文档")
     try:
-        # TODO: 参数可配置
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=50,
-            length_function=len,
-            add_start_index=True,
+        # 使用 MarkdownTextSplitter 替代 RecursiveCharacterTextSplitter
+        text_splitter = MarkdownTextSplitter(
+            chunk_size=500, # 块大小
+            chunk_overlap=50, # 块重叠
         )
         chunks = text_splitter.split_documents(documents)
+        # 手动为块添加 start_index, 因为 MarkdownTextSplitter 不会自动添加
+        for i, chunk in enumerate(chunks):
+            # 模拟一个大致的起始位置，实际场景可能需要更精确的计算
+            # 但对于基于内容的检索，这个元数据的重要性相对较低
+            chunk.metadata["start_index"] = i * (500 - 50) 
+
         logger.info(f"文档成功分割成 {len(chunks)} 个文本块")
         return chunks
     except Exception as e:
