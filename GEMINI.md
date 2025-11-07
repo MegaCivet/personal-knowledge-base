@@ -4,9 +4,27 @@
 
 ---
 
-## ✅ 已完成的工作 (v1.0 - 2025年11月6日)
+## ✅ 已完成的工作
 
-### 1. 项目初始化与架构设计
+### v1.1 - RAG索引功能实现 (2025年11月7日)
+
+1.  **数据库扩展**: 
+    - 新增了 `knowledge_file_chunks` 表，用于存储文本块的元数据及其与源文件的关联。
+    - 创建了相应的SQLAlchemy模型 (`knowledge_file_chunk.py`)、Pydantic Schema (`knowledge_chunk.py`) 和CRUD层 (`crud_knowledge_chunk.py`)。
+
+2.  **RAG服务层**: 
+    - 创建了模块化的 `rag_service.py`，将索引流程清晰地分解为加载、分割、嵌入和存储等多个带日志的步骤。
+    - 实现了文件上传后，自动触发端到端索引的完整流程。
+
+3.  **高效模型加载**: 
+    - 创建了 `embedding.py` 模块，实现了嵌入模型的全局单例加载机制。
+    - 优化了模型加载逻辑，使其优先使用GPU（CUDA），并在GPU不可用时自动回退到CPU，显著提升了性能。
+
+4.  **环境与依赖调试**: 
+    - 解决了因Python虚拟环境不匹配导致的一系列“找不到模块”问题。
+    - 修正了因 `langchain` 库版本升级导致的多个模块导入路径错误，确保了应用的稳定运行。
+
+### v1.0 项目初始化与架构设计(2025年11月6日)
 - **项目结构**: 创建了清晰的前后端分离目录结构，并编写了 `README.md`。
 - **架构规划**: 确定了前后端技术栈，并规划了后端的业务分层架构（API层、服务层、CRUD层、模型层）。
 
@@ -33,31 +51,29 @@
 
 ## 🚀 后续行动方案 (Next Action Plan)
 
-下一步，我们的核心是为项目注入“灵魂”——实现 RAG（检索增强生成）的核心功能。
-
-### 阶段一：实现 RAG 之“索引” (Content Indexing)
-
-**目标**: 在文件上传成功后，自动读取文件内容，将其向量化并存入 ChromaDB 向量数据库。
-
-1.  **连接 ChromaDB**: 在 `app/db/vector_store.py` 中，编写代码初始化 ChromaDB 的持久化客户端，并准备好一个集合（Collection）用于存储向量。
-2.  **创建 RAG 服务**: 在 `app/services/rag_service.py` 中创建一个核心函数，例如 `create_index_for_file(filepath: str)`。
-3.  **实现处理流程**: 在上述函数中，使用 LangChain 实现完整的索引流水线：
-    - **加载 (Load)**: 使用 `TextLoader` 读取文件内容。
-    - **分割 (Split)**: 使用 `RecursiveCharacterTextSplitter` 将文本分割成小块 (chunks)。
-    - **嵌入 (Embed)**: 初始化 `HuggingFaceEmbeddings` (使用 `m3e-base` 模型)，将文本块转换为向量。
-    - **存储 (Store)**: 将向量及其元数据（如源文件名）存入 ChromaDB。
-4.  **集成**: 在 `knowledge_service.py` 的文件处理流程中，当一个新文件被成功保存后，调用 `rag_service.create_index_for_file` 函数，触发索引流程。
+下一步，我们的核心是实现RAG的另一半——“检索与生成”，让知识库能够真正地回答问题。
 
 ### 阶段二：实现 RAG 之“检索与生成” (Retrieval & Generation)
 
 **目标**: 实现 `/api/v1/chat/query` 接口，接收用户提问，从向量数据库中检索相关信息，并交由大模型生成答案。
 
-1.  **定义 Schema**: 在 `app/schemas/` 下创建 `chat.py`，定义聊天请求和响应的 Pydantic 模型。
-2.  **实现检索逻辑**: 在 `rag_service.py` 中创建 `query_knowledge_base` 函数。它接收用户问题，将其向量化，并在 ChromaDB 中进行相似度搜索，找出最相关的文本块。
-3.  **实现生成逻辑**: 
-    - 在服务层中，将用户问题和检索到的相关文本块组合成一个结构化的提示 (Prompt)。
-    - 调用 DeepSeek API，将提示发送给大语言模型，获取最终答案。
-4.  **更新端点**: 在 `app/api/v1/endpoints/chat.py` 中实现 `/query` 路由，调用服务层的 `query_knowledge_base` 函数并返回结果。
+1.  **定义 Schema**: 在 `app/schemas/` 下创建 `chat.py`，用于定义聊天请求（如 `QueryRequest`）和响应（如 `QueryResponse`）的 Pydantic 模型。
+
+2.  **实现检索逻辑**: 
+    - 在 `rag_service.py` 中，创建一个新的 `query_knowledge_base` 函数。
+    - 此函数将接收用户的提问字符串，使用已加载的嵌入模型将其向量化，然后在 ChromaDB 中执行相似度搜索，找出最相关的N个文本块及其内容。
+
+3.  **实现生成服务**: 
+    - 创建一个新的服务文件 `app/services/chat_service.py`。
+    - 在其中创建一个 `generate_answer` 函数，它将调用 `rag_service.query_knowledge_base` 获取上下文。
+    - **(关键步骤)** 此函数负责将用户的原始问题和检索到的上下文文本块组合成一个结构化的提示（Prompt）。
+    - 调用一个外部大语言模型（LLM）的API（如DeepSeek），将此提示发送给它，并获取生成的答案。
+
+4.  **创建聊天端点**: 
+    - 创建 `app/api/v1/endpoints/chat.py` 文件。
+    - 在其中实现 `/query` 路由，它接收来自前端的请求，调用 `chat_service.generate_answer` 函数，并将最终答案返回。
+
+5.  **整合API路由**: 将新创建的 `chat` 路由添加到 `app/api/v1/api.py` 主API路由器中，使其在应用中生效。
 
 ### 阶段三：前端开发 (Frontend Development)
 
