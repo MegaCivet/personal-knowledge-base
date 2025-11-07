@@ -1,0 +1,17 @@
+.home-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+}
+
+.left-panel {
+  flex: 0 0 30%; /* Takes up 30% of the width, doesn't grow or shrink */
+  padding: 1rem;
+  border-right: 1px solid #ccc;
+}
+
+.right-panel {
+  flex: 1; /* Takes up the remaining space */
+  padding: 1rem;
+}
