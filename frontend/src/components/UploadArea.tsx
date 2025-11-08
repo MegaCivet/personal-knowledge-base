@@ -39,12 +39,28 @@ const UploadArea: React.FC = () => {
     multiple: true,
     accept: '.md',
     customRequest: async (options) => {
+      // --- 修改开始 ---
+      // 安全地获取文件名
+      const file = options.file;
+      let fileName: string = '文件'; // 设置一个默认文件名
+
+      if (file instanceof File) {
+        // 如果是 File 对象，直接用 .name
+        fileName = file.name;
+      } else if (typeof (file as any)?.name === 'string') {
+        // 兼容 antd 的 RcFile (它可能不是 File 的实例，但有 name 属性)
+        fileName = (file as any).name;
+      }
+      // --- 修改结束 ---
+
       try {
         await uploadFile(options);
-        message.success(`${options.file.name} 文件上传成功.`);
+        // 使用我们安全获取的 fileName
+        message.success(`${fileName} 文件上传成功.`);
         fetchFiles(); // Refresh the file list after upload
       } catch (error) {
-        message.error(`${options.file.name} 文件上传失败.`);
+        // 使用我们安全获取的 fileName
+        message.error(`${fileName} 文件上传失败.`);
       }
     },
     onChange(info) {
@@ -55,6 +71,8 @@ const UploadArea: React.FC = () => {
         // message.error(`${info.file.name} 文件上传失败.`); // Message already handled by customRequest
       }
     },
+    // 隐藏 antd 自己的上传列表，因为我们有自定义的列表
+    showUploadList: false,
   };
 
   return (
@@ -72,7 +90,6 @@ const UploadArea: React.FC = () => {
         <Text strong>已上传文件:</Text>
         <List
           loading={loading}
-          bordered
           dataSource={fileList}
           renderItem={item => (
             <List.Item>
