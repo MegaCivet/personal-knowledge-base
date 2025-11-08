@@ -1,0 +1,59 @@
+/*
+ * --------------------------------
+ * Markdown 内容样式修复
+ * --------------------------------
+*/
+
+/* 我们在 ChatWindow.tsx 中添加了 .markdown-content 这个 class */
+.markdown-content {
+  /* 重置 <p> 标签的默认外边距，让聊天内容更紧凑 */
+  margin: 0;
+  padding: 0;
+}
+
+.markdown-content p {
+  /* 移除 Ant Design List 描述中可能产生的多余边距 */
+  margin-top: 0;
+  margin-bottom: 0.5em; /* 保留段落之间的间距 */
+}
+
+/* 修复第一个和最后一个 P 标签的边距，使其紧贴气泡边缘 */
+.markdown-content p:first-child {
+  margin-top: 0;
+}
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 列表样式 */
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 20px; /* 缩进列表 */
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* 代码块样式 */
+.markdown-content pre {
+  background-color: #f6f8fa; /* 浅灰色背景 */
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto; /* 当代码行太长时允许滚动 */
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* 行内代码样式 */
+.markdown-content code {
+  background-color: #f6f8fa;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* 修复 pre 标签内的 code 标签样式 */
+.markdown-content pre code {
+  background-color: transparent; /* pre 已经有背景了 */
+  padding: 0;
+  border-radius: 0;
+}

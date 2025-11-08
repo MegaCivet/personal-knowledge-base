@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Button, Input, List, Spin } from 'antd';
 import { postQuery, type Source } from '../api/chatApi';
 import SourceList from './SourceList';
+// 1. 导入 ReactMarkdown
+import ReactMarkdown from 'react-markdown';
+import '../styles/ChatWindow.css'
 
 interface Message {
   sender: 'user' | 'bot';
@@ -47,7 +50,14 @@ const ChatWindow: React.FC = () => {
               title={item.sender === 'user' ? 'You' : 'Bot'}
               description={
                 <div>
-                  {item.text}
+                  {/* 2. 修改渲染逻辑 */}
+                  {item.sender === 'bot' ? (
+                    <div className="markdown-content">
+                      <ReactMarkdown>{item.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    item.text
+                  )}
                   {item.sender === 'bot' && item.sources && <SourceList sources={item.sources} />}
                 </div>
               }
