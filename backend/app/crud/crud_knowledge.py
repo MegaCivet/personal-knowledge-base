@@ -25,7 +25,8 @@ def create(db: Session, file_in: KnowledgeFileCreate) -> KnowledgeFile:
     # 创建 ORM 模型实例
     db_obj = KnowledgeFile(
         id=get_snowflake_id(),  # 使用雪花ID生成器
-        filename=file_in.filename
+        filename=file_in.filename,
+        tag=file_in.tag
     )
     db.add(db_obj)
     db.commit()

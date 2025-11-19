@@ -3,52 +3,80 @@
   flex-direction: row;
   height: 100vh;
   width: 100vw;
-  background-color: #f0f2f5; 
+  background-color: var(--bg-color);
+  padding: 16px;
+  gap: 16px;
+  box-sizing: border-box;
 }
 
+/* 左侧边栏：像一张卡片 */
 .left-panel {
-  flex: 0 0 30%;
-  border-right: 1px solid #d9d9d9;
+  flex: 0 0 320px; /* 固定宽度，更精致 */
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* 保持 header 和 upload-area 之间的垂直间距 */
-  background-color: #ffffff;
-  overflow-y: auto;
-  
-  padding: 1.5rem 1.5rem 0 1.5rem; 
+  gap: 20px;
+  background-color: var(--surface-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+  overflow: hidden; /* 内部滚动 */
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
 }
 
+/* 右侧主区域：也是一张卡片 */
 .right-panel {
   flex: 1;
-  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  background-color: var(--surface-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden; /* 内部滚动交由子组件处理 */
+  border: 1px solid var(--border-color);
+  position: relative; /* 为内部绝对定位做准备 */
 }
 
 .app-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem; 
-  
-  /* --- 修改点 --- */
-  /* 移除所有 padding，让它完全由父级 .left-panel 控制 */
-  padding: 0;
-}
-
-/* Force antd upload wrapper to have zero horizontal margin */
-.left-panel .ant-upload-wrapper {
-    margin-left: 0;
-    margin-right: 0;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
 }
 
 .app-logo {
-  font-size: 2rem; 
-  color: #1677ff; 
+  font-size: 28px;
+  color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.1); /* 淡淡的主色背景 */
+  padding: 8px;
+  border-radius: 10px;
 }
 
 .app-title {
-  font-size: 1.25rem; 
-  font-weight: 600;
-  margin: 0; 
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+  }
+  .left-panel, .right-panel {
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
+  .left-panel {
+    flex: 0 0 auto;
+    max-height: 40vh;
+    border-bottom: 1px solid var(--border-color);
+  }
 }

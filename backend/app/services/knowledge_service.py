@@ -6,11 +6,12 @@ from sqlalchemy.orm import Session
 from app.crud import crud_knowledge, crud_knowledge_chunk
 from app.services import file_service, rag_service
 from app.schemas.knowledge_file import KnowledgeFileResponse, KnowledgeFileCreate
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
-def process_upload_files(db: Session, files: List[UploadFile]) -> List[KnowledgeFileResponse]:
+def process_upload_files(db: Session, files: List[UploadFile],tag: Optional[str] = None) -> List[KnowledgeFileResponse]:
     """
     处理文件上传的核心业务逻辑。
 
@@ -21,6 +22,8 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
     """
     if not files:
         raise HTTPException(status_code=400, detail="没有提供任何文件")
+
+    final_tag = tag if tag and tag.strip() else "默认"
 
     processed_files = []
     for file in files:
@@ -40,6 +43,12 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
             # --- 更新逻辑 ---
             logger.info(f"文件 '{file.filename}' 已存在，开始执行更新和重新索引流程...")
             
+            if db_file.tag != final_tag:
+                db_file.tag = final_tag
+                db.add(db_file)
+                db.commit()
+                db.refresh(db_file)
+
             # 2a. 从MySQL中删除旧的块记录，并获取需要删除的向量ID
             logger.debug(f"正在从MySQL删除文件ID {db_file.id} 的旧索引记录...")
             vector_ids_to_delete = crud_knowledge_chunk.delete_by_file_id(db=db, file_id=db_file.id)
@@ -52,7 +61,7 @@ def process_upload_files(db: Session, files: List[UploadFile]) -> List[Knowledge
         else:
             # --- 新增逻辑 ---
             logger.info(f"文件 '{file.filename}' 是新文件，创建数据库记录...")
-            file_in = KnowledgeFileCreate(filename=file.filename)
+            file_in = KnowledgeFileCreate(filename=file.filename, tag=final_tag)
             new_db_file = crud_knowledge.create(db, file_in=file_in)
             processed_files.append(new_db_file)
             db_file = new_db_file # 统一变量名以便后续使用
@@ -82,3 +91,14 @@ def get_all_knowledge_files(db: Session) -> List[KnowledgeFileResponse]:
     """
     knowledge_files = crud_knowledge.get_all(db)
     return [KnowledgeFileResponse.model_validate(file) for file in knowledge_files]
+
+
+def update_file_tag(db: Session, file_id: int, tag: str) -> KnowledgeFileResponse:
+    db_file = crud_knowledge.get(db, id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="文件未找到")
+    db_file.tag = tag
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    return KnowledgeFileResponse.model_validate(db_file)

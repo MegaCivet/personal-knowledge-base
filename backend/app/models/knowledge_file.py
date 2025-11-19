@@ -13,6 +13,8 @@ class KnowledgeFile(Base):
     id = Column(BigInteger, primary_key=True, index=True, comment="文件ID (雪花ID)")
     
     filename = Column(String(255), nullable=False, unique=True, comment="文件名")
+
+    tag = Column(String(50), nullable=True, default="默认", comment="文件标签/分类")
     
     created_at = Column(DateTime, server_default=func.now(), comment="创建时间")
     

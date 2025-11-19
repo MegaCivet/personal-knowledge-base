@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 
 # --- Schemas for Chat ---
@@ -17,8 +17,13 @@ class SourceDocument(BaseModel):
     filename: str
     content: str
     # 可以选择性地包含其他元数据
-    file_id: Optional[int] = None
+    file_id: Optional[str] = None
     start_index: Optional[int] = None
+    tag: Optional[str] = None
+
+    @field_validator("file_id", mode="before")
+    def _file_id_to_str(cls, v):
+        return str(v) if v is not None else None
 
 
 class QueryResponse(BaseModel):
