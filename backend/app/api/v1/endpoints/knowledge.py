@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from typing import List,Optional
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException,Form
 from sqlalchemy.orm import Session
 
 from app.services import knowledge_service
@@ -30,6 +30,7 @@ async def test_chroma_connection():
 @router.post("/upload", response_model=List[KnowledgeFileResponse])
 def upload_files(
     files: List[UploadFile] = File(..., description="要上传的一个或多个 .md 文件"),
+    tag: Optional[str] = Form(None, description="文件的分类标签"),
     db: Session = Depends(get_db)
 ):
     """
@@ -41,7 +42,7 @@ def upload_files(
     - **覆盖逻辑**: 如果上传了同名文件，现有文件将被覆盖。
     - **TODO**: 此接口后续需要触发对文件的RAG索引流程。
     """
-    processed_files = knowledge_service.process_upload_files(db=db, files=files)
+    processed_files = knowledge_service.process_upload_files(db=db, files=files,tag=tag)
     return processed_files
 
 

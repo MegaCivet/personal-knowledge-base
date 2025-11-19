@@ -1,11 +1,12 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from typing import Optional
 
 # --- Base Schema ---
 # 包含所有模型共有的字段
 class KnowledgeFileBase(BaseModel):
     filename: str
-
+    tag: Optional[str] = None 
 
 # --- Create Schema ---
 # 用于创建记录时的数据模型
