@@ -1,67 +1,77 @@
 import axios from 'axios';
 
-const API_URL = '/api/v1/knowledge';
+const API_URL = '/api/v1'; // Update base to include router prefix handling better if needed, but here relative to /api/v1
 
-// 更新类型定义，支持 tag
-// 关键修复：将回调函数设为可选 (?)，以匹配 Ant Design 的 UploadRequestOption 类型
 interface UploadOptions {
   onSuccess?: (data: any) => void;
   onError?: (err: any) => void;
-  file: File | any; // 放宽类型以兼容 RcFile
+  file: File | any; 
   onProgress?: (event: { percent: number }) => void;
-  tag?: string; // 新增可选参数
+  tag?: string; 
 }
 
 export interface KnowledgeFile {
-    id: number;
+    id: string; // 修改点：number -> string
     filename: string;
-    tag?: string; // 新增可选参数
+    tag?: string;
     created_at: string;
     updated_at: string;
 }
 
+export interface TagItem {
+    id: string; // 修改点：number -> string
+    name: string;
+    created_at: string;
+}
+
+// --- Knowledge API ---
+
 export const uploadFile = async (options: UploadOptions) => {
   const { onSuccess, onError, file, onProgress, tag } = options;
-
   const formData = new FormData();
-  // The name 'files' must match the backend endpoint parameter name.
   formData.append('files', file);
-  
-  // 如果有 tag，则添加到 formData
-  if (tag) {
-    formData.append('tag', tag);
-  }
+  if (tag) formData.append('tag', tag);
 
   try {
-    // --- 修改点：移除 headers 配置，让浏览器自动设置 multipart/form-data 和 boundary ---
-    const response = await axios.post(`${API_URL}/upload`, formData, {
+    const response = await axios.post(`${API_URL}/knowledge/upload`, formData, {
       onUploadProgress: (event: any) => {
-        // 增加非空检查
         if (onProgress && event.total) {
            const percent = Math.floor((event.loaded / event.total) * 100);
            onProgress({ percent });
         }
       },
     });
-    // 增加非空检查
-    if (onSuccess) {
-        onSuccess(response.data);
-    }
+    if (onSuccess) onSuccess(response.data);
   } catch (err) {
     console.error(err);
-    // 增加非空检查
-    if (onError) {
-        onError(err);
-    }
+    if (onError) onError(err);
   }
 };
 
 export const getKnowledgeFiles = async (): Promise<KnowledgeFile[]> => {
-  try {
-    const response = await axios.get(`${API_URL}/files`);
+  const response = await axios.get(`${API_URL}/knowledge/files`);
+  return response.data;
+};
+
+// 修改点：fileId 参数类型改为 string
+export const updateFileTag = async (fileId: string, newTag: string): Promise<KnowledgeFile> => {
+  const response = await axios.patch(`${API_URL}/knowledge/${fileId}/tag`, { tag: newTag });
+  return response.data;
+};
+
+// --- Tag API ---
+
+export const getTags = async (): Promise<TagItem[]> => {
+    const response = await axios.get(`${API_URL}/tags/`);
     return response.data;
-  } catch (error) {
-    console.error("Error fetching knowledge files:", error);
-    throw error;
-  }
+};
+
+export const createTag = async (name: string): Promise<TagItem> => {
+    const response = await axios.post(`${API_URL}/tags/`, { name });
+    return response.data;
+};
+
+// 修改点：id 参数类型改为 string
+export const deleteTag = async (id: string): Promise<void> => {
+    await axios.delete(`${API_URL}/tags/${id}`);
 };

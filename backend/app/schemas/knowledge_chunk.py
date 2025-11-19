@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 # --- Schemas for KnowledgeFileChunk ---
 
@@ -15,6 +15,10 @@ class KnowledgeFileChunkCreate(KnowledgeFileChunkBase):
 
 class KnowledgeFileChunkResponse(KnowledgeFileChunkBase):
     """用于API响应的文本块模型"""
-    id: int
+    id: str
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", mode="before")
+    def _id_to_str(cls, v):
+        return str(v) if v is not None else v

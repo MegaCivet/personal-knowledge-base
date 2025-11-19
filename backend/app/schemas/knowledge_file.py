@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
 from typing import Optional
 
@@ -18,9 +18,13 @@ class KnowledgeFileCreate(KnowledgeFileBase):
 # --- Response Schema ---
 # 用于从数据库读取数据并作为API响应返回的模型
 class KnowledgeFileResponse(KnowledgeFileBase):
-    id: int
+    id: str
     created_at: datetime
     updated_at: datetime
 
     # from_attributes=True 允许 Pydantic 从 ORM 对象属性中读取数据来创建模型实例
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", mode="before")
+    def _id_to_str(cls, v):
+        return str(v) if v is not None else v

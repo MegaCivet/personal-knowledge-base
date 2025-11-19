@@ -4,7 +4,8 @@ import {
   FolderOpenOutlined, 
   FileTextOutlined, 
   CloudUploadOutlined, 
-  TagOutlined,
+  SettingOutlined,
+  EditOutlined,
   RightOutlined 
 } from '@ant-design/icons';
 import { 
@@ -12,51 +13,88 @@ import {
   Upload, 
   List, 
   Typography, 
-  Input, 
+  Select, 
   Collapse, 
   Tag, 
   Button, 
   Modal, 
   Form,
+  Input,
   Card,
   Empty,
   Tooltip
 } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
-import { uploadFile, getKnowledgeFiles, type KnowledgeFile } from '../api/knowledgeApi';
+import { 
+    uploadFile, 
+    getKnowledgeFiles, 
+    getTags,
+    updateFileTag,
+    type KnowledgeFile, 
+    type TagItem 
+} from '../api/knowledgeApi';
+import TagManager from './TagManager'; // 引入标签管理组件
 
 const { Dragger } = Upload;
 const { Text } = Typography;
 
 const UploadArea: React.FC = () => {
-  // ... 逻辑状态保持不变 ...
+  // --- 状态定义 ---
   const [existingFiles, setExistingFiles] = useState<KnowledgeFile[]>([]);
+  const [availableTags, setAvailableTags] = useState<TagItem[]>([]); // 可选标签列表
   const [loadingList, setLoadingList] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // 上传 Modal 状态
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<UploadFile[]>([]);
-  const [form] = Form.useForm();
+  
+  // 标签管理 Modal 状态
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
 
-  // ... fetchFiles 逻辑保持不变 ...
+  // 修改文件标签 Modal 状态
+  const [isEditTagModalOpen, setIsEditTagModalOpen] = useState(false);
+  const [editingFile, setEditingFile] = useState<KnowledgeFile | null>(null);
+
+  const [uploadForm] = Form.useForm();
+  const [editTagForm] = Form.useForm();
+
+  // --- 数据加载 ---
   const fetchFiles = async () => {
     setLoadingList(true);
     try {
       const files = await getKnowledgeFiles();
       setExistingFiles(files);
     } catch (error) {
-      message.error("获取文件列表失败。");
+      message.error("获取文件列表失败");
     } finally {
       setLoadingList(false);
     }
   };
 
+  const fetchTags = async () => {
+    try {
+        const tags = await getTags();
+        setAvailableTags(tags);
+    } catch (error) {
+        console.error("Failed to fetch tags", error);
+    }
+  };
+
   useEffect(() => {
     fetchFiles();
+    fetchTags();
   }, []);
 
-  // ... 分组逻辑保持不变 ...
+  // --- 分组逻辑 ---
   const groupedFiles = useMemo(() => {
     const groups: Record<string, KnowledgeFile[]> = {};
+    // 默认先初始化已有的标签，确保即便是空标签也能显示分组（可选）
+    availableTags.forEach(t => {
+        if (!groups[t.name]) groups[t.name] = [];
+    });
+    if (!groups['未分类']) groups['未分类'] = [];
+
     existingFiles.forEach(file => {
       const tag = file.tag || '未分类';
       if (!groups[tag]) {
@@ -64,28 +102,48 @@ const UploadArea: React.FC = () => {
       }
       groups[tag].push(file);
     });
-    return groups;
-  }, [existingFiles]);
+    
+    // 过滤掉没有文件的分组，如果想要显示空分组可以去掉这行
+    const filteredGroups: Record<string, KnowledgeFile[]> = {};
+    Object.keys(groups).forEach(key => {
+        if (groups[key].length > 0) filteredGroups[key] = groups[key];
+    });
+    return filteredGroups;
+  }, [existingFiles, availableTags]);
 
-  // ... Modal 操作逻辑保持不变 ...
-  const showModal = () => {
-    setIsModalOpen(true);
-    setPendingFiles([]);
-    form.resetFields();
+  // --- 动作处理 ---
+
+  // 打开修改标签 Modal
+  const handleEditFileTag = (file: KnowledgeFile) => {
+      setEditingFile(file);
+      // 设置表单初始值
+      const initialTag = file.tag && availableTags.some(t => t.name === file.tag) ? file.tag : undefined;
+      editTagForm.setFieldValue('tag', initialTag);
+      setIsEditTagModalOpen(true);
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
+  // 提交修改文件标签
+  const submitEditFileTag = async () => {
+      if (!editingFile) return;
+      try {
+          const values = await editTagForm.validateFields();
+          await updateFileTag(editingFile.id, values.tag);
+          message.success("修改成功");
+          setIsEditTagModalOpen(false);
+          fetchFiles(); // 刷新列表
+      } catch (error) {
+          message.error("修改失败");
+      }
   };
 
-  // ... 上传逻辑保持不变 ...
+  // 提交上传
   const handleUploadSubmit = async () => {
     if (pendingFiles.length === 0) {
       message.warning('请至少选择一个文件！');
       return;
     }
     try {
-      const values = await form.validateFields();
+      const values = await uploadForm.validateFields();
       const tag = values.tag;
       setUploading(true);
       const uploadPromises = pendingFiles.map((file) => {
@@ -102,10 +160,9 @@ const UploadArea: React.FC = () => {
       });
       await Promise.all(uploadPromises);
       message.success('文件上传成功！');
-      setIsModalOpen(false);
+      setIsUploadModalOpen(false);
       fetchFiles();
     } catch (error) {
-      console.error("Upload error:", error);
       message.error('部分或全部文件上传失败，请重试。');
     } finally {
       setUploading(false);
@@ -121,16 +178,15 @@ const UploadArea: React.FC = () => {
         return newFileList;
       });
     },
-    beforeUpload: (file) => { return false; },
+    beforeUpload: (file) => false,
     fileList: pendingFiles,
     multiple: true,
     accept: '.md',
     onChange: ({ fileList }) => { setPendingFiles(fileList); }
   };
 
-  // --- UI 渲染优化 ---
-  
-  // 自定义 Collapse 渲染
+  // --- 渲染 ---
+
   const collapseItems = Object.keys(groupedFiles).map(tag => ({
     key: tag,
     label: (
@@ -150,9 +206,22 @@ const UploadArea: React.FC = () => {
         dataSource={groupedFiles[tag]}
         split={false}
         renderItem={item => (
-          <List.Item style={{ padding: '8px 12px', borderRadius: 8, cursor: 'default', transition: 'background 0.2s' }} className="file-list-item">
-             <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-                <div style={{ padding: 6, background: '#f1f5f9', borderRadius: 6, color: '#64748b' }}>
+          <List.Item 
+            style={{ padding: '8px 12px', borderRadius: 8, transition: 'background 0.2s' }} 
+            className="file-list-item"
+            actions={[
+                <Tooltip title="修改标签">
+                    <Button 
+                        type="text" 
+                        size="small" 
+                        icon={<EditOutlined />} 
+                        onClick={() => handleEditFileTag(item)} 
+                    />
+                </Tooltip>
+            ]}
+          >
+             <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', overflow: 'hidden' }}>
+                <div style={{ padding: 6, background: '#f1f5f9', borderRadius: 6, color: '#64748b', flexShrink: 0 }}>
                     <FileTextOutlined />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -170,28 +239,37 @@ const UploadArea: React.FC = () => {
     )
   }));
 
+  // 标签选择器的 Options
+  const tagOptions = availableTags.map(t => ({ label: t.name, value: t.name }));
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* 顶部操作按钮：更醒目 */}
-      <div style={{ marginBottom: '24px' }}>
+      
+      {/* 顶部操作区 */}
+      <div style={{ marginBottom: '24px', display: 'flex', gap: 12 }}>
         <Button 
           type="primary" 
           icon={<CloudUploadOutlined />} 
-          onClick={showModal}
-          block
-          size="large"
-          style={{ 
-            height: '48px', 
-            fontSize: '16px', 
-            fontWeight: 500,
-            boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.39)' 
+          onClick={() => {
+              setIsUploadModalOpen(true);
+              setPendingFiles([]);
+              uploadForm.resetFields();
           }}
+          size="large"
+          style={{ flex: 1, boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.39)' }}
         >
-          上传新文档
+          上传文档
         </Button>
+        <Tooltip title="管理标签">
+            <Button 
+                icon={<SettingOutlined />} 
+                size="large" 
+                onClick={() => setIsTagManagerOpen(true)}
+            />
+        </Tooltip>
       </div>
 
-      {/* 列表区域：更整洁 */}
+      {/* 列表区域 */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <Text style={{ color: '#64748b', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -203,10 +281,7 @@ const UploadArea: React.FC = () => {
         {loadingList ? (
             <Card loading bordered={false} style={{ boxShadow: 'none', background: 'transparent' }} />
         ) : existingFiles.length === 0 ? (
-             <Empty 
-                image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                description={<span style={{ color: '#94a3b8' }}>暂无文档，快去上传吧</span>} 
-             />
+             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span style={{ color: '#94a3b8' }}>暂无文档</span>} />
         ) : (
             <Collapse 
                 defaultActiveKey={Object.keys(groupedFiles)} 
@@ -218,62 +293,75 @@ const UploadArea: React.FC = () => {
         )}
       </div>
 
-      {/* Modal 样式优化 */}
+      {/* 1. 上传 Modal */}
       <Modal
         title={<div style={{ fontSize: '18px', fontWeight: 600 }}>上传文档</div>}
-        open={isModalOpen}
-        onCancel={handleCancel}
+        open={isUploadModalOpen}
+        onCancel={() => setIsUploadModalOpen(false)}
         width={500}
         footer={[
-            <Button key="back" onClick={handleCancel} disabled={uploading} size="large" style={{ borderRadius: 8 }}>
-              取消
-            </Button>,
-            <Button 
-              key="submit" 
-              type="primary" 
-              loading={uploading} 
-              onClick={handleUploadSubmit}
-              size="large"
-              style={{ borderRadius: 8, paddingLeft: 32, paddingRight: 32 }}
-            >
-              {uploading ? '处理中...' : '开始上传'}
-            </Button>,
+            <Button key="back" onClick={() => setIsUploadModalOpen(false)} disabled={uploading}>取消</Button>,
+            <Button key="submit" type="primary" loading={uploading} onClick={handleUploadSubmit}>开始上传</Button>,
         ]}
         centered
       >
         <div style={{ marginTop: 24 }}>
-            <Form form={form} layout="vertical" name="upload_form">
+            <Form form={uploadForm} layout="vertical" name="upload_form">
                 <Form.Item
                     name="tag"
-                    label={<span style={{ fontWeight: 500 }}>文档标签</span>}
-                    rules={[{ required: true, message: '请填写文档标签' }]}
+                    label={<span style={{ fontWeight: 500 }}>选择标签</span>}
+                    rules={[{ required: true, message: '请选择一个标签' }]}
                 >
-                    <Input 
-                        prefix={<TagOutlined style={{ color: '#94a3b8' }} />} 
-                        placeholder="例如：项目需求、技术方案..." 
+                    <Select 
+                        placeholder="请选择已有标签" 
                         size="large"
-                        allowClear
+                        options={tagOptions}
+                        showSearch
+                        filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                        notFoundContent={<Button type="link" size="small" onClick={() => setIsTagManagerOpen(true)}>去创建新标签</Button>}
                     />
                 </Form.Item>
 
-                <Form.Item
-                    label={<span style={{ fontWeight: 500 }}>选择文件</span>}
-                    required
-                    style={{ marginBottom: 0 }}
-                >
+                <Form.Item label={<span style={{ fontWeight: 500 }}>选择文件</span>} required>
                     <Dragger {...uploadProps} style={{ borderRadius: 12, background: '#f8fafc', border: '2px dashed #e2e8f0' }}>
-                        <p className="ant-upload-drag-icon">
-                            <InboxOutlined style={{ color: '#6366f1' }} />
-                        </p>
+                        <p className="ant-upload-drag-icon"><InboxOutlined style={{ color: '#6366f1' }} /></p>
                         <p className="ant-upload-text" style={{ color: '#334155' }}>点击或拖拽文件到此处</p>
-                        <p className="ant-upload-hint" style={{ color: '#94a3b8' }}>
-                            支持 Markdown (.md) 格式
-                        </p>
                     </Dragger>
                 </Form.Item>
             </Form>
         </div>
       </Modal>
+
+      {/* 2. 修改文件标签 Modal */}
+      <Modal
+        title="修改文档标签"
+        open={isEditTagModalOpen}
+        onCancel={() => setIsEditTagModalOpen(false)}
+        onOk={submitEditFileTag}
+        centered
+        width={400}
+      >
+         <Form form={editTagForm} layout="vertical" style={{ marginTop: 20 }}>
+            <Form.Item label="当前文件">
+                <Input value={editingFile?.filename} disabled />
+            </Form.Item>
+            <Form.Item name="tag" label="新标签" rules={[{ required: true, message: '请选择标签' }]}>
+                <Select 
+                    placeholder="选择标签" 
+                    options={tagOptions} 
+                    showSearch
+                />
+            </Form.Item>
+         </Form>
+      </Modal>
+
+      {/* 3. 标签管理组件 */}
+      <TagManager 
+        open={isTagManagerOpen} 
+        onClose={() => setIsTagManagerOpen(false)} 
+        onTagsChanged={fetchTags} 
+      />
+
     </div>
   );
 };

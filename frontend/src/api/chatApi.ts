@@ -5,7 +5,7 @@ const API_URL = '/api/v1/chat';
 export interface Source {
   filename: string;
   content: string;
-  file_id: number;
+  file_id: string; // 修改点：number -> string
   start_index: number;
 }
 

@@ -1,11 +1,12 @@
-from typing import List,Optional
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException,Form
+from typing import List, Optional
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form, Body
 from sqlalchemy.orm import Session
 
 from app.services import knowledge_service
 from app.schemas.knowledge_file import KnowledgeFileResponse
 from app.db.database import get_db
 from app.db.vector_store import get_or_create_collection
+from app.crud import crud_knowledge
 
 router = APIRouter()
 
@@ -35,14 +36,8 @@ def upload_files(
 ):
     """
     上传一个或多个 Markdown 文件到知识库。
-
-    此端点接收文件并将其传递给服务层进行处理。
-    - **文件存储**: 文件将被保存到服务器。
-    - **元数据**: 文件的元数据将被记录到数据库。
-    - **覆盖逻辑**: 如果上传了同名文件，现有文件将被覆盖。
-    - **TODO**: 此接口后续需要触发对文件的RAG索引流程。
     """
-    processed_files = knowledge_service.process_upload_files(db=db, files=files,tag=tag)
+    processed_files = knowledge_service.process_upload_files(db=db, files=files, tag=tag)
     return processed_files
 
 
@@ -54,3 +49,22 @@ def get_all_files(
     获取所有已上传的知识文件列表。
     """
     return knowledge_service.get_all_knowledge_files(db=db)
+
+@router.patch("/{file_id}/tag", response_model=KnowledgeFileResponse)
+def update_file_tag(
+    file_id: int,
+    tag: str = Body(..., embed=True), # Expect JSON: {"tag": "new_tag_name"}
+    db: Session = Depends(get_db)
+):
+    """
+    更新指定文件的标签
+    """
+    db_file = crud_knowledge.get(db, id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="文件未找到")
+    
+    db_file.tag = tag
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    return db_file
