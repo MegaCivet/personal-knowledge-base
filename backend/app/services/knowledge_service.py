@@ -91,3 +91,14 @@ def get_all_knowledge_files(db: Session) -> List[KnowledgeFileResponse]:
     """
     knowledge_files = crud_knowledge.get_all(db)
     return [KnowledgeFileResponse.model_validate(file) for file in knowledge_files]
+
+
+def update_file_tag(db: Session, file_id: int, tag: str) -> KnowledgeFileResponse:
+    db_file = crud_knowledge.get(db, id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="文件未找到")
+    db_file.tag = tag
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    return KnowledgeFileResponse.model_validate(db_file)

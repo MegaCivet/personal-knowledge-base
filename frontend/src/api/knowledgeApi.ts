@@ -1,28 +1,9 @@
 import axios from 'axios';
+import type { UploadOptions, KnowledgeFile, TagItem } from '../types/api';
 
-const API_URL = '/api/v1'; // Update base to include router prefix handling better if needed, but here relative to /api/v1
+const API_URL = '/api/v1';
 
-interface UploadOptions {
-  onSuccess?: (data: any) => void;
-  onError?: (err: any) => void;
-  file: File | any; 
-  onProgress?: (event: { percent: number }) => void;
-  tag?: string; 
-}
-
-export interface KnowledgeFile {
-    id: string; // 修改点：number -> string
-    filename: string;
-    tag?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-export interface TagItem {
-    id: string; // 修改点：number -> string
-    name: string;
-    created_at: string;
-}
+// types moved to ../types/api
 
 // --- Knowledge API ---
 

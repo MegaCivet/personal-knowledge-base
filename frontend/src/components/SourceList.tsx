@@ -1,11 +1,7 @@
 import React from 'react';
 import { Tag } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
-import type { Source } from '../api/chatApi';
-
-interface SourceListProps {
-  sources: Source[];
-}
+import type { SourceListProps } from '../types/components';
 
 const SourceList: React.FC<SourceListProps> = ({ sources }) => {
   // Get unique filenames

@@ -29,10 +29,9 @@ import {
     uploadFile, 
     getKnowledgeFiles, 
     getTags,
-    updateFileTag,
-    type KnowledgeFile, 
-    type TagItem 
+    updateFileTag
 } from '../api/knowledgeApi';
+import type { KnowledgeFile, TagItem } from '../types/api';
 import TagManager from './TagManager'; // 引入标签管理组件
 
 const { Dragger } = Upload;
@@ -178,7 +177,7 @@ const UploadArea: React.FC = () => {
         return newFileList;
       });
     },
-    beforeUpload: (file) => false,
+    beforeUpload: () => false,
     fileList: pendingFiles,
     multiple: true,
     accept: '.md',

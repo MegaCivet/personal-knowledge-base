@@ -53,18 +53,7 @@ def get_all_files(
 @router.patch("/{file_id}/tag", response_model=KnowledgeFileResponse)
 def update_file_tag(
     file_id: int,
-    tag: str = Body(..., embed=True), # Expect JSON: {"tag": "new_tag_name"}
+    tag: str = Body(..., embed=True),
     db: Session = Depends(get_db)
 ):
-    """
-    更新指定文件的标签
-    """
-    db_file = crud_knowledge.get(db, id=file_id)
-    if not db_file:
-        raise HTTPException(status_code=404, detail="文件未找到")
-    
-    db_file.tag = tag
-    db.add(db_file)
-    db.commit()
-    db.refresh(db_file)
-    return db_file
+    return knowledge_service.update_file_tag(db=db, file_id=file_id, tag=tag)

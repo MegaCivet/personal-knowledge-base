@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, List, Input, Button, message, Popconfirm, Empty } from 'antd';
 import { DeleteOutlined, PlusOutlined, TagOutlined } from '@ant-design/icons';
-import { getTags, createTag, deleteTag, type TagItem } from '../api/knowledgeApi';
-
-interface TagManagerProps {
-    open: boolean;
-    onClose: () => void;
-    onTagsChanged: () => void; // 通知父组件刷新标签列表
-}
+import { getTags, createTag, deleteTag } from '../api/knowledgeApi';
+import type { TagItem } from '../types/api';
+import type { TagManagerProps } from '../types/components';
 
 const TagManager: React.FC<TagManagerProps> = ({ open, onClose, onTagsChanged }) => {
     const [tags, setTags] = useState<TagItem[]>([]);

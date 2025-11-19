@@ -1,16 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Input, Spin } from 'antd';
 import { SendOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
-import { postQuery, type Source } from '../api/chatApi';
+import { postQuery } from '../api/chatApi';
+import type { Message } from '../types/components';
 import SourceList from './SourceList';
 import ReactMarkdown from 'react-markdown';
 import '../styles/ChatWindow.css';
 
-interface Message {
-  sender: 'user' | 'bot';
-  text: string;
-  sources?: Source[];
-}
 
 const ChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
