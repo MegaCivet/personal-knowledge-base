@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+langchain
+langchain-community
+chromadb
+sentence-transformers
+python-multipart
+python-dotenv
+SQLAlchemy
+PyMySQL
+snowflakekit
+accelerate
+openai

@@ -1,0 +1,54 @@
+.home-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f0f2f5; 
+}
+
+.left-panel {
+  flex: 0 0 30%;
+  border-right: 1px solid #d9d9d9;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* 保持 header 和 upload-area 之间的垂直间距 */
+  background-color: #ffffff;
+  overflow-y: auto;
+  
+  padding: 1.5rem 1.5rem 0 1.5rem; 
+}
+
+.right-panel {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; 
+  
+  /* --- 修改点 --- */
+  /* 移除所有 padding，让它完全由父级 .left-panel 控制 */
+  padding: 0;
+}
+
+/* Force antd upload wrapper to have zero horizontal margin */
+.left-panel .ant-upload-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.app-logo {
+  font-size: 2rem; 
+  color: #1677ff; 
+}
+
+.app-title {
+  font-size: 1.25rem; 
+  font-weight: 600;
+  margin: 0; 
+}
