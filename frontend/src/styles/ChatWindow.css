@@ -59,6 +59,7 @@
   line-height: 1.6;
   box-shadow: var(--shadow-sm);
   position: relative;
+  text-align: left;
 }
 
 /* 机器人气泡 */
@@ -124,6 +125,12 @@
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.chat-container,
+.chat-list-container,
+.markdown-content {
+  text-align: left;
 }
 
 /* 输入框悬浮感 */
