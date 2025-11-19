@@ -42,6 +42,7 @@ const UploadArea: React.FC = () => {
   const [existingFiles, setExistingFiles] = useState<KnowledgeFile[]>([]);
   const [availableTags, setAvailableTags] = useState<TagItem[]>([]); // 可选标签列表
   const [loadingList, setLoadingList] = useState<boolean>(false);
+  const [activeKeys, setActiveKeys] = useState<string[]>([]);
   
   // 上传 Modal 状态
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -110,6 +111,15 @@ const UploadArea: React.FC = () => {
     return filteredGroups;
   }, [existingFiles, availableTags]);
 
+  useEffect(() => {
+    if (activeKeys.length === 0) {
+      const keys = Object.keys(groupedFiles);
+      if (keys.length > 0) {
+        setActiveKeys(keys);
+      }
+    }
+  }, [groupedFiles]);
+
   // --- 动作处理 ---
 
   // 打开修改标签 Modal
@@ -160,7 +170,8 @@ const UploadArea: React.FC = () => {
       await Promise.all(uploadPromises);
       message.success('文件上传成功！');
       setIsUploadModalOpen(false);
-      fetchFiles();
+      await fetchFiles();
+      setActiveKeys(prev => (prev.includes(tag) ? prev : [...prev, tag]));
     } catch (error) {
       message.error('部分或全部文件上传失败，请重试。');
     } finally {
@@ -282,8 +293,9 @@ const UploadArea: React.FC = () => {
         ) : existingFiles.length === 0 ? (
              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span style={{ color: '#94a3b8' }}>暂无文档</span>} />
         ) : (
-            <Collapse 
-                defaultActiveKey={Object.keys(groupedFiles)} 
+          <Collapse 
+                activeKey={activeKeys}
+                onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
                 ghost 
                 expandIcon={({ isActive }) => <RightOutlined rotate={isActive ? 90 : 0} style={{ fontSize: '12px', color: '#cbd5e1' }} />}
                 items={collapseItems}
