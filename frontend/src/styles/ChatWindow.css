@@ -57,3 +57,69 @@
   padding: 0;
   border-radius: 0;
 }
+
+
+/* --- 建议 1: 聊天气泡样式 --- */
+
+.chat-list-container .ant-list-item {
+  /* 覆盖 antd 默认样式 */
+  padding: 8px 0;
+  border: none;
+  display: flex; /* 关键：允许气泡左右对齐 */
+}
+
+/* 根据发送者设置对齐方式 */
+.chat-message.user-message {
+  justify-content: flex-end; /* 用户消息靠右 */
+}
+.chat-message.bot-message {
+  justify-content: flex-start; /* 机器人消息靠左 */
+}
+
+.message-bubble {
+  max-width: 80%; /* 气泡最大宽度 */
+  padding: 10px 16px;
+  border-radius: 18px; /* 圆角 */
+  line-height: 1.6;
+  /* 确保 Markdown 内容的 <p> 标签不会破坏布局 */
+  word-break: break-word; /* 长单词自动换行 */
+  text-align: left;
+}
+
+/* 用户的气泡样式 */
+.user-message .message-bubble {
+  background-color: #1677ff; /* Ant Design 主蓝色 */
+  color: white;
+  border-bottom-right-radius: 4px; /* 增加一点“对话”感 */
+}
+
+/* 机器人的气泡样式 */
+.bot-message .message-bubble {
+  background-color: #f0f0f0; /* 浅灰色 */
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+/* 修复 Markdown 内容在气泡内的边距 */
+.bot-message .markdown-content p:last-child {
+  margin-bottom: 0;
+}
+.bot-message .markdown-content pre {
+  max-width: 100%; /* 确保代码块不会溢出气泡 */
+}
+
+/* --- 建议 3: 美化输入框 --- */
+.chat-input-area {
+  display: flex;
+  padding: 12px 20px;
+  border-top: 1px solid #f0f0f0; /* 顶部分割线 */
+  background-color: #ffffff;
+}
+
+/* (这里的 antd 样式覆盖可能需要根据你的 antd 版本微调) */
+.chat-input-area .ant-input-lg {
+  border-radius: 8px; /* 让输入框更圆润 */
+}
+.chat-input-area .ant-btn-lg {
+  border-radius: 8px; /* 让按钮更圆润 */
+}
