@@ -19,6 +19,7 @@ class SourceDocument(BaseModel):
     # 可以选择性地包含其他元数据
     file_id: Optional[str] = None
     start_index: Optional[int] = None
+    tag: Optional[str] = None
 
     @field_validator("file_id", mode="before")
     def _file_id_to_str(cls, v):

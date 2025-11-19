@@ -63,7 +63,8 @@ async def generate_answer(db: Session, request: QueryRequest) -> QueryResponse:
                         filename=db_file.filename,
                         content=doc.page_content,
                         file_id=file_id,
-                        start_index=doc.metadata.get("start_index")
+                        start_index=doc.metadata.get("start_index"),
+                        tag=db_file.tag
                     )
                     sources.append(source)
                 else:

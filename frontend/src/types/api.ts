@@ -17,6 +17,7 @@ export interface Source {
   content: string
   file_id: string
   start_index: number
+  tag?: string
 }
 
 export interface QueryResponse {
