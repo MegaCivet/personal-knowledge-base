@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 langchain
 langchain-community
+langchain-huggingface
 chromadb
 sentence-transformers
 python-multipart
@@ -11,3 +12,5 @@ PyMySQL
 snowflakekit
 accelerate
 openai
+alembic
+cryptography

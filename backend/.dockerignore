@@ -1,0 +1,26 @@
+# 忽略 Python 缓存
+
+pycache
+*.pyc
+*.pyo
+*.pyd
+
+# 忽略本地虚拟环境 (如果你在项目里建了 venv)
+
+venv/
+.venv/
+env/
+
+# 忽略 IDE 配置
+
+.idea/
+.vscode/
+
+#忽略数据目录 (因为我们会挂载它，不需要构建进去)
+
+data/
+
+# 忽略 Git
+
+.git/
+.gitignore
