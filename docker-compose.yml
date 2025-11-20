@@ -1,0 +1,62 @@
+services:
+  # --- 1. MySQL 数据库服务 ---
+  db:
+    image: mysql:8.0
+    container_name: knowledge_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: knowledge_base
+    command: 
+      # 开启原生密码认证插件，防止某些旧版客户端连接失败
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      # 持久化数据库数据
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # --- 2. 后端 API 服务 ---
+  backend:
+    build: ./backend
+    container_name: knowledge_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # 数据库连接配置 (host使用服务名 'db')
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: knowledge_base
+      
+      # LLM 配置 (请在 .env 文件中设置这些值，或者直接在这里替换)
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_API_BASE_URL: ${DEEPSEEK_API_BASE_URL:-https://api.deepseek.com/v1}
+      DEEPSEEK_MODEL_NAME: ${DEEPSEEK_MODEL_NAME:-deepseek-chat}
+      
+    volumes:
+      # 挂载本地 data 目录，持久化上传的文件和 ChromaDB 向量库
+      - ./backend/data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- 3. 前端 UI 服务 ---
+  frontend:
+    build: ./frontend
+    container_name: knowledge_frontend
+    restart: always
+    ports:
+      - "8080:80" # 宿主机端口 80 映射到容器端口 8080
+    depends_on:
+      - backend
+
+# 定义数据卷
+volumes:
+  db_data:

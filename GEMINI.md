@@ -2,84 +2,85 @@
 
 本文档由您的 AI 开发助手 Gemini 生成，用于记录项目进度和规划后续任务。
 
----
+## ✅ 已完成的工作 (Completed)
 
-## ✅ 已完成的工作
+### v1.3 - 前端基础功能实现 (Frontend MVP) (2025年11月19日)
+
+**状态**: ✅ 已完成
+
+1. **项目脚手架**:
+   - 使用 `Vite + React + TypeScript` 搭建了高性能的前端框架。
+   - 配置了 `Ant Design` 作为 UI 组件库，确保了界面的专业性和美观度。
+2. **核心组件开发**:
+   - **`HomePage`**: 采用了左右分栏的响应式布局，左侧管理文件，右侧对话。
+   - **`UploadArea`**: 实现了拖拽上传、文件列表展示、按标签分组显示以及修改标签的功能。
+   - **`ChatWindow`**: 实现了类似于 ChatGPT 的对话界面，支持 Markdown 渲染和来源溯源展示。
+   - **`TagManager`**: 提供了独立的标签管理模态框，支持增删标签。
+3. **前后端联调**:
+   - 封装了 `api/knowledgeApi.ts` 和 `api/chatApi.ts`，完成了文件上传、列表获取、标签管理和问答查询的所有接口对接。
+   - 解决了跨域代理 (`vite.config.ts`) 问题。
 
 ### v1.2 - 后端健壮性与性能优化 (2025年11月7日)
 
-1.  **集成真实LLM**: 
-    -   将原有的模拟LLM调用替换为对DeepSeek API的真实异步调用。
-    -   创建了全局共享的`AsyncOpenAI`客户端，避免了重复实例化。
+**状态**: ✅ 已完成
 
-2.  **配置优化**: 
-    -   将`PROMPT_TEMPLATE`和`SYSTEM_PROMPT`移至配置文件和环境变量中管理，提高了灵活性。
-
-3.  **RAG流程优化**: 
-    -   将文本分割器从`RecursiveCharacterTextSplitter`更换为对Markdown语法更友好的`MarkdownTextSplitter`，显著提升了对代码块等复杂结构的处理能力。
-
-4.  **实现文件更新逻辑**: 
-    -   增加了完整的“重新索引”流程。当重复上传文件时，系统会自动清理MySQL和ChromaDB中的旧索引数据，再创建新索引，确保了数据的一致性。
-
-5.  **应用性能优化**: 
-    -   将嵌入模型和LLM客户端的初始化逻辑从“首次请求时加载”（懒加载）修改为“应用启动时加载”（预加载），消除了首次API调用的冷启动延迟。
+1. **集成真实LLM**:
+   - 将原有的模拟LLM调用替换为对DeepSeek API的真实异步调用。
+   - 创建了全局共享的`AsyncOpenAI`客户端，避免了重复实例化。
+2. **配置优化**:
+   - 将`PROMPT_TEMPLATE`和`SYSTEM_PROMPT`移至配置文件和环境变量中管理。
+3. **RAG流程优化**:
+   - 将文本分割器更换为`MarkdownTextSplitter`，提升了代码块处理能力。
+4. **实现文件更新逻辑**:
+   - 增加了完整的“重新索引”流程（先删后加），确保数据一致性。
+5. **应用性能优化**:
+   - 实现了嵌入模型和LLM客户端的**应用启动时预加载**，消除了首屏延迟。
 
 ### v1.1 - RAG索引功能实现 (2025年11月7日)
 
-1.  **数据库扩展**: 
-    - 新增了 `knowledge_file_chunks` 表，用于存储文本块的元数据及其与源文件的关联。
-    - 创建了相应的SQLAlchemy模型 (`knowledge_file_chunk.py`)、Pydantic Schema (`knowledge_chunk.py`) 和CRUD层 (`crud_knowledge_chunk.py`)。
+**状态**: ✅ 已完成
 
-2.  **RAG服务层**: 
-    - 创建了模块化的 `rag_service.py`，将索引流程清晰地分解为加载、分割、嵌入和存储等多个带日志的步骤。
-    - 实现了文件上传后，自动触发端到端索引的完整流程。
-
-3.  **高效模型加载**: 
-    - 创建了 `embedding.py` 模块，实现了嵌入模型的全局单例加载机制。
-    - 优化了模型加载逻辑，使其优先使用GPU（CUDA），并在GPU不可用时自动回退到CPU，显著提升了性能。
-
-4.  **环境与依赖调试**: 
-    - 解决了因Python虚拟环境不匹配导致的一系列“找不到模块”问题。
-    - 修正了因 `langchain` 库版本升级导致的多个模块导入路径错误，确保了应用的稳定运行。
-
-### v1.0 项目初始化与架构设计(2025年11月6日)
-- **项目结构**: 创建了清晰的前后端分离目录结构，并编写了 `README.md`。
-- **架构规划**: 确定了前后端技术栈，并规划了后端的业务分层架构（API层、服务层、CRUD层、模型层）。
-
----
+1. **数据库扩展**: 新增 `knowledge_file_chunks` 表，建立元数据关联。
+2. **RAG服务层**: 实现了加载 -> 分割 -> 嵌入 -> 存储 (MySQL + ChromaDB) 的完整流水线。
+3. **高效模型加载**: 实现了嵌入模型的单例模式和 GPU/CPU 自动检测。
 
 ## 🚀 后续行动方案 (Next Action Plan)
 
-后端的核心功能已趋于完善和稳定。现在，我们的重心将全面转向前端开发，以构建一个用户可以实际操作的应用界面。
+为了将本项目从一个“功能原型”升级为**真正好用的个人主力知识库工具**，我们将按照以下阶段进行迭代。
 
-### 阶段三：前端开发 (Frontend Development)
+### 阶段四：部署与运维 (DevOps & Deployment) —— 優先級 P0
 
-**目标**: 构建一个功能完整、界面友好的Web应用，让用户可以方便地上传知识文件并进行问答。
+**目标**: 实现一键启动，降低使用门槛，确保数据安全。
 
-1.  **项目初始化**:
-    -   使用 `Vite` 或 `Create React App` 搭建 React 项目框架。
-    -   安装 `antd` (UI库), `axios` (HTTP客户端), `react-markdown` (用于渲染Markdown格式的答案和来源)。
+- [ ] **Docker 化**:
+  - 编写 `backend/Dockerfile` 和 `frontend/Dockerfile`。
+  - 编写 `docker-compose.yml`，编排 Backend, Frontend, MySQL 服务。
+  - **目标**: 用户只需运行 `docker-compose up -d` 即可使用，无需手动配环境。
+- [ ] **数据备份方案**:
+  - 编写简单的 Shell 脚本，定期备份 MySQL 数据 (`sql dump`) 和 ChromaDB 文件夹。
 
-2.  **项目结构调整与组件开发 (Project Structure Adjustment & Component Development)**:
-    -   **创建目录结构:** 在 `src` 目录下创建 `components`, `pages`, `api`, `hooks`, `styles` 等文件夹，以组织代码。
-    -   **主页开发 (`pages/HomePage.tsx`):** 创建主页组件，作为应用的整体布局容器。
-    -   **根组件改造 (`App.tsx`):** 修改 `App.tsx`，使其加载并显示 `HomePage` 页面。
-    -   **上传组件 (`components/UploadArea.tsx`):**
-        -   实现文件拖拽和选择上传功能。
-        -   调用 `POST /api/v1/knowledge/upload` 接口。
-        -   显示上传进度和成功/失败状态。
-    -   **聊天窗口 (`components/ChatWindow.tsx`):**
-        -   包含消息输入框和消息展示区。
-        -   调用 `POST /api/v1/chat/query` 接口。
-    -   **消息组件 (`components/Message.tsx`):**
-        -   用于展示用户和模型的对话消息。
-        -   使用 `react-markdown` 渲染模型返回的 Markdown 格式答案。
-    -   **来源组件 (`components/SourceList.tsx`):**
-        -   在模型回答下方，展示引用的来源。
+### 阶段五：核心体验升级 (Core Experience Upgrade) —— 優先級 P1
 
-3.  **状态管理**:
-    -   使用 React Hooks (`useState`, `useEffect`, `useContext`) 或状态管理库（如 Zustand, Redux Toolkit）来管理聊天记录、文件列表和应用加载状态。
+**目标**: 解决交互上的“痛点”，让对话更自然，支持更多资料格式。
 
-4.  **接口联调**:
-    -   编写 `api` 模块 (`chatApi.js`, `knowledgeApi.js`)，统一管理所有对后端的HTTP请求。
-    -   完成所有组件与后端接口的联调测试。
+- [ ] **多轮对话 (Multi-turn Chat)**:
+  - **后端**: 修改 `QueryRequest`，接收 `history` 字段；在 `chat_service` 中将历史对话拼接入 Prompt。
+  - **前端**: 在 `ChatWindow` 中维护对话上下文，并在发送请求时携带。
+- [ ] **PDF 支持**:
+  - **后端**: 引入 `PyMuPDF` 或 `LangChain PyPDFLoader`。
+  - **逻辑**: 在上传接口增加文件类型判断，针对 `.pdf` 执行特定的解析策略。
+- [ ] **流式响应 (Streaming)**:
+  - **后端**: 改写 `/chat/query` 接口，使用 `StreamingResponse` 和 Server-Sent Events (SSE)。
+  - **前端**: 改造 `ChatWindow` 的请求逻辑，实现打字机效果，提升主观响应速度。
+
+### 阶段六：高级功能 (Advanced Features) —— 優先級 P2
+
+**目标**: 提升检索准确率和知识管理的便捷性。
+
+- [ ] **混合检索 (Hybrid Search)**:
+  - 引入 BM25 关键词检索，解决专有名词搜不到的问题。
+- [ ] **来源预览 (Source Preview)**:
+  - **前端**: 点击来源卡片时，弹出模态框。
+  - **后端**: 新增接口 `GET /knowledge/{file_id}/content`，支持按需获取文件全文。
+- [ ] **系统设置页**:
+  - 前端增加设置页面，允许用户动态调整 LLM 的 `Temperature` 和 System Prompt。
